@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recueil de chants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#f7f3ea; --card:#fffdf8; --ink:#1f2430; --muted:#6b6f7a; --line:#e4ddcc;
+  --blue:#1d3f8f; --blue-soft:#e6ecf8; --gold:#b8892f; --danger:#b3261e;
+  --serif:"Noto Serif",Georgia,serif; --sans:"Noto Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 96px}
+
+/* Header */
+header{position:sticky;top:0;z-index:20;background:var(--blue);color:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.hd{max-width:760px;margin:0 auto;padding:14px 16px 0;display:flex;align-items:center;gap:12px}
+.logo{width:36px;height:36px;border-radius:10px;background:rgba(255,255,255,.14);display:grid;place-items:center;flex:none}
+.hd h1{font-family:var(--serif);font-size:19px;margin:0;font-weight:700;letter-spacing:.2px}
+.hd small{display:block;font-family:var(--sans);font-weight:400;opacity:.75;font-size:12px}
+.tabs{max-width:760px;margin:0 auto;display:flex;padding:10px 8px 0}
+.tab{flex:1;background:none;border:0;color:rgba(255,255,255,.7);padding:10px 8px 12px;font-weight:600;font-size:15px;border-bottom:3px solid transparent}
+.tab.on{color:#fff;border-bottom-color:var(--gold)}
+
+/* Search & list */
+.search{position:relative;margin:18px 0 8px}
+.search input{width:100%;padding:14px 14px 14px 44px;border-radius:14px;border:1px solid var(--line);background:var(--card);font-size:16px;outline:none}
+.search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+.search svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.5}
+.meta-line{font-size:13px;color:var(--muted);margin:6px 2px 12px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.list{display:flex;flex-direction:column;gap:8px}
+.item{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:left;width:100%}
+.item:active{transform:scale(.995)}
+.num{flex:none;min-width:54px;height:44px;padding:0 8px;border-radius:10px;background:var(--blue);color:#fff;font-weight:700;font-size:17px;display:grid;place-items:center}
+.item .t{font-family:var(--serif);font-size:17px;font-weight:600;line-height:1.25}
+.item .s{font-size:13px;color:var(--muted);margin-top:2px}
+.item .note{margin-left:auto;flex:none;color:var(--gold)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:16px 2px 2px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:9px 14px;font-weight:600;font-size:14px;display:inline-flex;align-items:center;gap:7px;white-space:nowrap}
+.chip .c{font-size:12px;font-weight:700;background:var(--blue-soft);color:var(--blue);border-radius:999px;padding:1px 8px}
+.chip.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.chip.on .c{background:rgba(255,255,255,.2);color:#fff}
+.chip.add{border-style:dashed;color:var(--blue)}
+.rc-tag{display:inline-block;font-size:11.5px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.5px}
+.song-rc{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gold);background:#fff8ea;border:1px solid #ecd7a8;border-radius:999px;padding:4px 12px;margin-bottom:10px}
+.modal input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px;margin-bottom:16px;outline:none}
+.theme-f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);font-size:15px;margin:0 0 4px}
+.imp-row{display:flex;gap:8px;align-items:baseline;padding:7px 0;border-bottom:1px solid var(--line);font-size:14.5px}
+.imp-row b{min-width:42px;color:var(--blue)}
+.imp-row span{flex:1}
+.imp-row i{font-size:12px;color:var(--muted);font-style:normal}
+.imp-th{font-size:12px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 2px}
+.progress{height:8px;background:var(--blue-soft);border-radius:4px;overflow:hidden;margin:10px 0}
+.progress i{display:block;height:100%;width:0;background:var(--blue);transition:width .2s}
+.stat{display:flex;gap:10px;flex-wrap:wrap;margin:6px 0 4px}
+.stat div{flex:1;min-width:90px;background:var(--blue-soft);border-radius:12px;padding:10px 12px}
+.stat b{display:block;font-size:22px;color:var(--blue);font-family:var(--serif)}
+.stat span{font-size:12.5px;color:var(--muted)}
+.empty{text-align:center;padding:48px 16px;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--serif);font-size:18px;margin-bottom:6px}
+
+/* Forms */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px}
+.card h2{font-family:var(--serif);font-size:18px;margin:0 0 12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:5px}
+input[type=text],input[type=number],textarea,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:16px;outline:none}
+input:focus,textarea:focus,select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-soft)}
+textarea{font-family:var(--serif);line-height:1.55;min-height:120px;resize:vertical}
+.req{color:var(--danger)}
+.chars{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.chars button{min-width:38px;height:38px;border-radius:9px;border:1px solid var(--line);background:#fff;font-family:var(--serif);font-size:17px}
+.chars button:active{background:var(--blue-soft)}
+.hint{font-size:12.5px;color:var(--muted);margin:6px 0 0}
+
+.section{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px;background:#fff}
+.section.refrain{border-left:4px solid var(--gold)}
+.section.couplet{border-left:4px solid var(--blue)}
+.sec-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.sec-hd strong{font-size:14px}
+.sec-hd .sp{flex:1}
+.icon-btn{width:34px;height:34px;border-radius:8px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;padding:0}
+.icon-btn:disabled{opacity:.35}
+.row-btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px 14px;font-weight:600;font-size:14.5px;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.gold{background:#fff8ea;border-color:#ecd7a8;color:#7a5a17}
+.btn.danger{color:var(--danger);border-color:#efc9c5}
+.btn.block{width:100%;justify-content:center;padding:14px;font-size:16px}
+
+.audio-box{display:flex;flex-direction:column;gap:10px}
+.audio-cur{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--blue-soft);font-size:14px}
+.audio-cur .sp{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--danger);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+
+/* Song view */
+.song-top{display:flex;align-items:center;gap:8px;margin:14px 0 4px}
+.song-top .sp{flex:1}
+.song-head{text-align:center;padding:18px 8px 6px}
+.song-num{display:inline-block;font-family:var(--serif);font-weight:700;font-size:34px;color:var(--blue);line-height:1}
+.song-title{font-family:var(--serif);font-size:24px;font-weight:700;margin:8px 0 6px;line-height:1.25}
+.song-meta{font-size:13.5px;color:var(--muted);font-style:italic;font-family:var(--serif);line-height:1.6}
+.player{position:sticky;top:104px;z-index:10;display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:8px 16px 8px 8px;margin:14px auto 6px;max-width:460px;box-shadow:0 4px 14px rgba(29,63,143,.10)}
+.play{width:48px;height:48px;border-radius:50%;border:0;background:var(--blue);color:#fff;display:grid;place-items:center;flex:none}
+.prog{flex:1;height:6px;background:var(--blue-soft);border-radius:3px;position:relative;cursor:pointer}
+.prog i{position:absolute;left:0;top:0;bottom:0;background:var(--blue);border-radius:3px;width:0}
+.time{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:74px;text-align:right}
+.no-audio{text-align:center;font-size:13px;color:var(--muted);margin:10px 0}
+.lyrics{font-family:var(--serif);padding:8px 4px 24px;--fs:20px}
+.verse{display:grid;grid-template-columns:44px 1fr;gap:6px;margin:22px 0}
+.verse .lab{font-weight:700;color:var(--blue);font-size:calc(var(--fs)*.85);padding-top:2px}
+.verse.ref .lab{color:var(--gold);font-size:calc(var(--fs)*.7);letter-spacing:.5px}
+.verse.ref .txt{font-style:italic;background:#fff8ea;border-radius:10px;padding:8px 12px;margin-left:-12px}
+.verse .txt{font-size:var(--fs);line-height:1.6;white-space:pre-wrap}
+.zoom{display:flex;gap:6px}
+.notes-box{font-size:14px;color:var(--muted);border-top:1px dashed var(--line);padding-top:12px;margin-top:8px;white-space:pre-wrap}
+
+/* Toast & modal */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(120px);background:#1f2430;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;transition:transform .25s;z-index:50;max-width:90%}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.modal{position:fixed;inset:0;background:rgba(20,24,35,.45);display:none;align-items:center;justify-content:center;z-index:60;padding:20px}
+.modal.show{display:flex}
+.modal .box{background:var(--card);border-radius:16px;padding:20px;max-width:380px;width:100%}
+.modal h3{margin:0 0 8px;font-family:var(--serif)}
+.modal p{margin:0 0 16px;color:var(--muted);font-size:14.5px}
+.modal .row-btns{justify-content:flex-end}
+.hide{display:none!important}
+@media (max-width:520px){.grid{grid-template-columns:1fr}.song-title{font-size:21px}.player{top:100px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hd">
+    <div class="logo" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+    </div>
+    <h1>Recueil de chants<small>Chants traditionnels protestants · Nouvelle-Calédonie</small></h1>
+  </div>
+  <nav class="tabs">
+    <button class="tab on" data-tab="recueil">Recueil</button>
+    <button class="tab" data-tab="saisie">Ajouter un chant</button>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <!-- RECUEIL -->
+  <section id="v-recueil">
+    <div class="chips" id="chips"></div>
+    <div class="search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="N° du cantique ou titre…" autocomplete="off">
+    </div>
+    <select id="theme-f" class="theme-f hide"></select>
+    <div class="meta-line"><span id="count"></span><span><a href="#" id="lnk-pdf" style="color:var(--blue)">Importer un PDF</a> · <a href="#" id="lnk-export" style="color:var(--blue)">Sauvegarder</a> · <a href="#" id="lnk-import" style="color:var(--blue)">Restaurer</a></span></div>
+    <div class="list" id="list"></div>
+    <input type="file" id="f-import" accept="application/json,.json" class="hide">
+  </section>
+
+  <!-- CHANT -->
+  <section id="v-chant" class="hide">
+    <div class="song-top">
+      <button class="btn" id="b-back">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg>Recueil
+      </button>
+      <span class="sp"></span>
+      <div class="zoom">
+        <button class="icon-btn" id="z-minus" title="Réduire le texte">A−</button>
+        <button class="icon-btn" id="z-plus" title="Agrandir le texte">A+</button>
+      </div>
+      <button class="icon-btn" id="b-edit" title="Modifier">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
+    </div>
+    <div class="song-head">
+      <div class="song-rc hide" id="s-rc"></div><br>
+      <div class="song-num" id="s-num"></div>
+      <div class="song-title" id="s-title"></div>
+      <div class="song-meta" id="s-meta"></div>
+    </div>
+    <div class="player hide" id="player">
+      <button class="play" id="b-play" aria-label="Lire la mélodie"></button>
+      <div class="prog" id="prog"><i id="prog-bar"></i></div>
+      <span class="time" id="time">0:00 / 0:00</span>
+    </div>
+    <div class="no-audio hide" id="no-audio">Aucune mélodie enregistrée pour ce chant.</div>
+    <div class="lyrics" id="s-lyrics"></div>
+    <div class="notes-box hide" id="s-notes"></div>
+    <audio id="audio" preload="metadata"></audio>
+  </section>
+
+  <!-- IMPORT PDF -->
+  <section id="v-import" class="hide">
+    <div class="song-top">
+      <button class="btn" id="imp-back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m15 18-6-6 6-6"/></svg>Recueil</button>
+    </div>
+    <div class="card">
+      <h2>Importer un recueil PDF</h2>
+      <p class="hint" style="margin-top:0">Choisissez un recueil au format PDF (texte, pas une photo scannée). L'appli repère les chants (« 12. TITRE (N.A. 84) »), les couplets numérotés, les refrains et les rubriques en majuscules.</p>
+      <label class="btn primary block" style="margin-top:12px;color:#fff;font-size:16px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        Choisir le fichier PDF
+        <input type="file" id="f-pdf" accept="application/pdf,.pdf" class="hide">
+      </label>
+      <div id="imp-status" class="hide"><p class="hint" id="imp-msg"></p><div class="progress"><i id="imp-bar"></i></div></div>
+    </div>
+    <div id="imp-result" class="hide">
+      <div class="card">
+        <h2>Chants détectés</h2>
+        <div class="stat"><div><b id="st-n">0</b><span>chants</span></div><div><b id="st-t">0</b><span>rubriques</span></div><div><b id="st-r">0</b><span>avec refrain</span></div></div>
+        <p class="hint" id="st-warn"></p>
+        <div style="margin-top:12px"><label>Ranger dans le recueil</label><select id="imp-rc"></select></div>
+        <div style="margin-top:12px"><label>Langue des chants</label><input type="text" id="imp-langue" list="langues" placeholder="ex. Ajië"></div>
+        <div style="margin-top:12px"><label>Si un numéro existe déjà dans ce recueil</label>
+          <select id="imp-dup"><option value="skip">Garder le chant existant (ignorer)</option><option value="replace">Remplacer par la version du PDF (la mélodie est conservée)</option></select></div>
+        <button class="btn primary block" id="imp-go" style="margin-top:16px">Importer les chants</button>
+      </div>
+      <div class="card"><h2>Aperçu</h2><div id="imp-list"></div></div>
+    </div>
+  </section>
+
+  <!-- SAISIE -->
+  <section id="v-saisie" class="hide">
+    <form id="form" autocomplete="off">
+      <div class="card">
+        <h2 id="form-title">Nouveau chant</h2>
+        <div class="grid">
+          <div class="full"><label>Recueil <span class="req">*</span></label><select id="i-recueil" required></select></div>
+          <div><label>N° du cantique <span class="req">*</span></label><input type="text" inputmode="numeric" id="i-num" required placeholder="ex. 174"></div>
+          <div><label>Langue</label><input type="text" id="i-langue" list="langues" placeholder="ex. Ajië"></div>
+          <div class="full"><label>Titre <span class="req">*</span></label><input type="text" id="i-titre" required></div>
+          <div><label>Auteur</label><input type="text" id="i-auteur"></div>
+          <div><label>Date</label><input type="text" id="i-date" placeholder="ex. 1965"></div>
+          <div class="full"><label>Origine (tribu, paroisse…)</label><input type="text" id="i-origine"></div>
+          <div><label>Rubrique</label><input type="text" id="i-theme" list="themes-dl" placeholder="ex. Noël"></div>
+          <div><label>Air / réf. mélodie</label><input type="text" id="i-air" placeholder="ex. N.A. 47"></div>
+          <datalist id="themes-dl"></datalist>
+        </div>
+        <datalist id="langues">
+          <option>Ajië</option><option>A'jië</option><option>Paicî</option><option>Drehu</option><option>Nengone</option><option>Iaai</option>
+          <option>Xârâcùù</option><option>Cèmuhî</option><option>Fwâi</option><option>Nemi</option><option>Bwatoo</option><option>Drubea</option>
+          <option>Numèè</option><option>Nyelâyu</option><option>Tîrî</option><option>Haeke</option><option>Haveke</option><option>Français</option>
+        </datalist>
+      </div>
+
+      <div class="card">
+        <h2>Paroles</h2>
+        <div id="sections"></div>
+        <div class="row-btns">
+          <button type="button" class="btn" id="add-couplet">+ Couplet</button>
+          <button type="button" class="btn gold" id="add-refrain">+ Refrain</button>
+        </div>
+        <p class="hint">Les couplets sont numérotés automatiquement. Utilisez les flèches pour réorganiser.</p>
+        <label style="margin-top:14px">Caractères spéciaux <span style="font-weight:400">(s'insèrent dans le champ actif)</span></label>
+        <div class="chars" id="chars"></div>
+      </div>
+
+      <div class="card">
+        <h2>Mélodie</h2>
+        <div class="audio-box">
+          <div class="audio-cur hide" id="a-cur">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+            <span class="sp" id="a-name"></span>
+            <button type="button" class="icon-btn" id="a-test" title="Écouter">▶</button>
+            <button type="button" class="icon-btn" id="a-del" title="Retirer">✕</button>
+          </div>
+          <div class="row-btns">
+            <label class="btn" style="margin:0;color:var(--ink);font-size:14.5px">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+              Importer un fichier audio
+              <input type="file" id="i-audio" accept="audio/*" class="hide">
+            </label>
+            <button type="button" class="btn" id="b-rec">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10a7 7 0 0 1-14 0"/><path d="M12 19v3"/></svg>
+              <span id="rec-lbl">Enregistrer</span>
+            </button>
+            <span id="rec-state" class="hide" style="display:inline-flex;align-items:center;gap:8px;font-size:14px"><span class="rec-dot"></span><span id="rec-time">0:00</span></span>
+          </div>
+          <p class="hint">MP3, M4A, WAV… ou un mémo vocal enregistré sur le téléphone.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Notes</h2>
+        <textarea id="i-notes" style="min-height:70px;font-family:var(--sans)" placeholder="Occasion, ton, remarques…"></textarea>
+      </div>
+
+      <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+        <button type="submit" class="btn primary block" id="b-save">Enregistrer le chant</button>
+        <button type="button" class="btn danger block hide" id="b-delete">Supprimer ce chant</button>
+        <button type="button" class="btn block hide" id="b-cancel">Annuler</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="box"><h3 id="m-title"></h3><p id="m-text"></p><input type="text" id="m-input" class="hide"><div class="row-btns"><button class="btn" id="m-no">Annuler</button><button class="btn primary" id="m-yes">Confirmer</button></div></div></div>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const norm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+
+/* ---------- Stockage (IndexedDB, repli mémoire) ---------- */
+const store = (() => {
+  let db = null; const mem = { chants: new Map(), recueils: new Map() };
+  const ready = new Promise(res => {
+    try {
+      const r = indexedDB.open("recueil-chants", 2);
+      r.onupgradeneeded = () => {
+        const d = r.result;
+        if (!d.objectStoreNames.contains("chants")) d.createObjectStore("chants", { keyPath: "id" });
+        if (!d.objectStoreNames.contains("recueils")) d.createObjectStore("recueils", { keyPath: "id" });
+      };
+      r.onsuccess = () => { db = r.result; res(); };
+      r.onerror = () => res();
+    } catch { res(); }
+  });
+  const tx = (name, mode, fn) => new Promise((res, rej) => {
+    const t = db.transaction(name, mode), os = t.objectStore(name);
+    const out = fn(os); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error);
+  });
+  const api = name => ({
+    async all() { await ready; if (!db) return [...mem[name].values()]; return tx(name, "readonly", os => os.getAll()); },
+    async put(c) { await ready; if (!db) { mem[name].set(c.id, c); return; } return tx(name, "readwrite", os => os.put(c)); },
+    async del(id) { await ready; if (!db) { mem[name].delete(id); return; } return tx(name, "readwrite", os => os.delete(id)); }
+  });
+  return { ...api("chants"), recueils: api("recueils") };
+})();
+
+let chants = [];
+const byNum = (a, b) => {
+  const na = parseFloat(a.numero), nb = parseFloat(b.numero);
+  if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+  return String(a.numero).localeCompare(String(b.numero), "fr", { numeric: true });
+};
+/* Recueils */
+const DEFAULT_RC = [
+  { id: "taperas", nom: "Tapéras", ordre: 1 },
+  { id: "cantiques-ajie", nom: "Cantiques ajië", ordre: 2 },
+  { id: "chants-prieres", nom: "Chants de prières", ordre: 3 }
+];
+let recueils = [], filtreRc = "all";
+try { filtreRc = localStorage.getItem("rc-filtre") || "all"; } catch {}
+const rcName = id => recueils.find(r => r.id === id)?.nom || "Non classé";
+
+async function load() {
+  recueils = await store.recueils.all();
+  if (!recueils.length) { for (const r of DEFAULT_RC) await store.recueils.put(r); recueils = DEFAULT_RC.slice(); }
+  recueils.sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
+  chants = (await store.all()).sort(byNum);
+  if (filtreRc !== "all" && filtreRc !== "none" && !recueils.some(r => r.id === filtreRc)) filtreRc = "all";
+  renderChips(); renderList(); fillRcSelect();
+}
+
+function renderChips() {
+  const cnt = id => chants.filter(c => id === "all" ? true : id === "none" ? !recueils.some(r => r.id === c.recueil) : c.recueil === id).length;
+  const items = [{ id: "all", nom: "Tous" }, ...recueils];
+  if (cnt("none")) items.push({ id: "none", nom: "Non classés" });
+  $("#chips").innerHTML = items.map(r => `<button class="chip ${filtreRc === r.id ? "on" : ""}" data-rc="${esc(r.id)}">${esc(r.nom)} <span class="c">${cnt(r.id)}</span></button>`).join("")
+    + `<button class="chip add" id="chip-add">+ Nouveau recueil</button>`;
+  $("#chips").querySelectorAll("[data-rc]").forEach(b => b.onclick = () => {
+    filtreRc = b.dataset.rc; try { localStorage.setItem("rc-filtre", filtreRc); } catch {}
+    renderChips(); renderList();
+  });
+  $("#chip-add").onclick = () => newRecueil();
+}
+
+function fillRcSelect(sel) {
+  const s = $("#i-recueil"), v = sel ?? s.value;
+  s.innerHTML = `<option value="" disabled>Choisir un recueil…</option>` +
+    recueils.map(r => `<option value="${esc(r.id)}">${esc(r.nom)}</option>`).join("") +
+    `<option value="__new__">+ Créer un nouveau recueil…</option>`;
+  s.value = recueils.some(r => r.id === v) ? v : "";
+}
+$("#i-recueil").addEventListener("change", async e => {
+  if (e.target.value !== "__new__") return;
+  const id = await newRecueil(true);
+  fillRcSelect(id || "");
+});
+
+async function newRecueil(fromForm) {
+  const nom = (await promptBox("Nouveau recueil", "Nom du recueil (ex. Chants de Noël)") || "").trim();
+  if (!nom) return null;
+  if (recueils.some(r => norm(r.nom) === norm(nom))) { toast("Ce recueil existe déjà."); return recueils.find(r => norm(r.nom) === norm(nom)).id; }
+  const r = { id: norm(nom).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + Date.now().toString(36).slice(-4), nom, ordre: Math.max(0, ...recueils.map(x => x.ordre || 0)) + 1 };
+  await store.recueils.put(r); recueils.push(r);
+  if (!fromForm) { filtreRc = r.id; }
+  renderChips(); renderList(); toast(`Recueil « ${nom} » créé.`);
+  return r.id;
+}
+
+/* ---------- UI utilitaires ---------- */
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2600); }
+function confirmBox(title, text, withInput) {
+  return new Promise(res => {
+    const inp = $("#m-input");
+    $("#m-title").textContent = title; $("#m-text").textContent = text; $("#modal").classList.add("show");
+    inp.classList.toggle("hide", !withInput); inp.value = ""; if (withInput) { inp.placeholder = text; $("#m-text").textContent = ""; setTimeout(() => inp.focus(), 50); }
+    const done = v => { $("#modal").classList.remove("show"); $("#m-yes").onclick = $("#m-no").onclick = inp.onkeydown = null; res(v); };
+    $("#m-yes").onclick = () => done(withInput ? inp.value : true); $("#m-no").onclick = () => done(withInput ? null : false);
+    inp.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); done(inp.value); } };
+  });
+}
+const promptBox = (title, ph) => confirmBox(title, ph, true);
+const fmt = s => { if (!isFinite(s)) return "0:00"; s = Math.floor(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+
+/* ---------- Navigation ---------- */
+function show(view) {
+  ["recueil", "chant", "saisie", "import"].forEach(v => $("#v-" + v).classList.toggle("hide", v !== view));
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("on", t.dataset.tab === (view === "chant" ? "recueil" : view)));
+  if (view !== "chant") stopAudio();
+  window.scrollTo(0, 0);
+}
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
+  if (t.dataset.tab === "saisie") openForm(null); else show("recueil");
+});
+
+/* ---------- Recueil ---------- */
+let filtreTheme = "";
+$("#theme-f").addEventListener("change", e => { filtreTheme = e.target.value; renderList(); });
+function renderList() {
+  const q = norm($("#q").value), list = $("#list");
+  const isNum = /^\d+$/.test(q);
+  const base0 = chants.filter(c => filtreRc === "all" ? true : filtreRc === "none" ? !recueils.some(r => r.id === c.recueil) : c.recueil === filtreRc);
+  const themes = [...new Set(base0.map(c => c.theme).filter(Boolean))];
+  const tf = $("#theme-f");
+  if (themes.length) {
+    if (themes.join("|") !== tf.dataset.k) {
+      tf.dataset.k = themes.join("|");
+      tf.innerHTML = `<option value="">Toutes les rubriques</option>` + themes.map(t => `<option>${esc(t)}</option>`).join("");
+      if (!themes.includes(filtreTheme)) filtreTheme = "";
+      tf.value = filtreTheme;
+    }
+  } else filtreTheme = "";
+  tf.classList.toggle("hide", !themes.length);
+  const base = filtreTheme ? base0.filter(c => c.theme === filtreTheme) : base0;
+  const res = !q ? base : base.filter(c =>
+    isNum ? String(c.numero).startsWith(q)
+          : norm(c.titre).includes(q) || norm(c.auteur).includes(q) || norm(c.theme).includes(q) || String(c.numero) === q);
+  if (isNum) res.sort((a, b) => (String(b.numero) === q) - (String(a.numero) === q));
+  const lieu = filtreRc === "all" ? "au total" : "dans « " + (filtreRc === "none" ? "Non classés" : rcName(filtreRc)) + " »";
+  $("#count").textContent = base.length ? `${res.length} chant${res.length > 1 ? "s" : ""} ${q ? "trouvé" + (res.length > 1 ? "s" : "") + " " : ""}${lieu}` : "";
+  if (!base.length) {
+    const nom = filtreRc === "all" ? "Le recueil est vide" : `« ${esc(rcName(filtreRc))} » est vide`;
+    list.innerHTML = `<div class="empty"><b>${nom}</b>Ajoutez un chant depuis l'onglet « Ajouter un chant ».<br><br><button class="btn primary" id="first">+ Ajouter un chant</button></div>`;
+    $("#first").onclick = () => openForm(null); return;
+  }
+  if (!res.length) { list.innerHTML = `<div class="empty"><b>Aucun résultat</b>Essayez un autre numéro ou une partie du titre.</div>`; return; }
+  list.innerHTML = res.map(c => `
+    <button class="item" data-id="${esc(c.id)}">
+      <span class="num">${esc(c.numero)}</span>
+      <span>${filtreRc === "all" ? `<span class="rc-tag" style="display:block">${esc(rcName(c.recueil))}</span>` : ""}<span class="t">${esc(c.titre)}</span>
+      <span class="s" style="display:block">${esc([filtreTheme ? "" : c.theme, c.air && "Air " + c.air, c.langue, c.auteur, c.date].filter(Boolean).join(" · "))}</span></span>
+      ${c.audio ? `<span class="note" title="Mélodie disponible"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>` : ""}
+    </button>`).join("");
+  list.querySelectorAll(".item").forEach(b => b.onclick = () => openSong(b.dataset.id));
+}
+$("#q").addEventListener("input", renderList);
+$("#q").addEventListener("keydown", e => {
+  if (e.key === "Enter") { const first = $("#list .item"); if (first) openSong(first.dataset.id); }
+});
+
+/* ---------- Affichage d'un chant ---------- */
+let current = null, audioURL = null;
+const audio = $("#audio");
+const ICON_PLAY = `<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><path d="M8 5.5v13l11-6.5z"/></svg>`;
+const ICON_PAUSE = `<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`;
+let fs = 20; try { fs = +localStorage.getItem("rc-fs") || 20; } catch {}
+
+function openSong(id) {
+  const c = chants.find(x => x.id === id); if (!c) return;
+  current = c;
+  $("#s-rc").textContent = rcName(c.recueil); $("#s-rc").classList.remove("hide");
+  $("#s-num").textContent = c.numero;
+  $("#s-title").textContent = c.titre;
+  const meta = [];
+  if (c.origine) meta.push(esc(c.origine));
+  const l2 = [c.date && "Date : " + esc(c.date), c.auteur && "Auteur : " + esc(c.auteur)].filter(Boolean).join(" — ");
+  if (l2) meta.push(l2);
+  if (c.langue) meta.push("Langue : " + esc(c.langue));
+  const l3 = [c.theme && "Rubrique : " + esc(c.theme), c.air && "Air : " + esc(c.air)].filter(Boolean).join(" — ");
+  if (l3) meta.push(l3);
+  $("#s-meta").innerHTML = meta.join("<br>");
+  let n = 0;
+  $("#s-lyrics").innerHTML = (c.sections || []).filter(s => s.texte.trim()).map(s => {
+    const ref = s.type === "refrain";
+    return `<div class="verse ${ref ? "ref" : ""}"><div class="lab">${ref ? "CH" : (++n) + ")"}</div><div class="txt">${esc(s.texte.trim())}</div></div>`;
+  }).join("") || `<p class="no-audio">Paroles non saisies.</p>`;
+  $("#s-lyrics").style.setProperty("--fs", fs + "px");
+  $("#s-notes").classList.toggle("hide", !c.notes); $("#s-notes").textContent = c.notes || "";
+  stopAudio();
+  if (audioURL) { URL.revokeObjectURL(audioURL); audioURL = null; }
+  if (c.audio) { audioURL = URL.createObjectURL(c.audio); audio.src = audioURL; }
+  else audio.removeAttribute("src");
+  $("#player").classList.toggle("hide", !c.audio);
+  $("#no-audio").classList.toggle("hide", !!c.audio);
+  show("chant");
+}
+function stopAudio() { audio.pause(); try { audio.currentTime = 0; } catch {} $("#b-play").innerHTML = ICON_PLAY; $("#prog-bar").style.width = "0"; }
+$("#b-play").innerHTML = ICON_PLAY;
+$("#b-play").onclick = async () => {
+  if (audio.paused) { try { await audio.play(); } catch { toast("Lecture impossible sur cet appareil."); } }
+  else audio.pause();
+};
+audio.onplay = () => $("#b-play").innerHTML = ICON_PAUSE;
+audio.onpause = audio.onended = () => $("#b-play").innerHTML = ICON_PLAY;
+audio.ontimeupdate = audio.onloadedmetadata = () => {
+  const d = audio.duration || 0;
+  $("#prog-bar").style.width = d ? (audio.currentTime / d * 100) + "%" : "0";
+  $("#time").textContent = fmt(audio.currentTime) + " / " + fmt(d);
+};
+$("#prog").onclick = e => { const r = e.currentTarget.getBoundingClientRect(); if (audio.duration) audio.currentTime = (e.clientX - r.left) / r.width * audio.duration; };
+$("#b-back").onclick = () => show("recueil");
+$("#b-edit").onclick = () => current && openForm(current);
+const zoom = d => { fs = Math.min(34, Math.max(14, fs + d)); $("#s-lyrics").style.setProperty("--fs", fs + "px"); try { localStorage.setItem("rc-fs", fs); } catch {} };
+$("#z-minus").onclick = () => zoom(-2); $("#z-plus").onclick = () => zoom(2);
+
+/* ---------- Formulaire ---------- */
+let editing = null, sections = [], newAudio = null, lastField = null;
+
+const CHARS = ["â","ê","î","ô","û","ä","ë","ï","ö","ü","è","é","à","ù","ç","ȓ","ã","ẽ","ĩ","õ","ũ","ŭ","ʼ","Ê","Ô","Ö","È","É"];
+$("#chars").innerHTML = CHARS.map(c => `<button type="button" data-c="${c}">${c}</button>`).join("");
+document.addEventListener("focusin", e => { if (e.target.matches("#form input[type=text], #form textarea")) lastField = e.target; });
+$("#chars").addEventListener("mousedown", e => e.preventDefault());
+$("#chars").onclick = e => {
+  const b = e.target.closest("button"); if (!b || !lastField) { if (b) toast("Touchez d'abord un champ de texte."); return; }
+  const f = lastField, s = f.selectionStart ?? f.value.length, en = f.selectionEnd ?? s;
+  f.value = f.value.slice(0, s) + b.dataset.c + f.value.slice(en);
+  f.focus(); f.setSelectionRange(s + b.dataset.c.length, s + b.dataset.c.length);
+  f.dispatchEvent(new Event("input", { bubbles: true }));
+};
+
+function renderSections() {
+  let n = 0;
+  $("#sections").innerHTML = sections.map((s, i) => {
+    const ref = s.type === "refrain";
+    return `<div class="section ${s.type}" data-i="${i}">
+      <div class="sec-hd"><strong>${ref ? "Refrain (CH)" : "Couplet " + (++n)}</strong><span class="sp"></span>
+        <button type="button" class="icon-btn" data-act="up" ${i === 0 ? "disabled" : ""} title="Monter">↑</button>
+        <button type="button" class="icon-btn" data-act="down" ${i === sections.length - 1 ? "disabled" : ""} title="Descendre">↓</button>
+        <button type="button" class="icon-btn" data-act="rm" title="Supprimer">✕</button></div>
+      <textarea data-i="${i}" placeholder="${ref ? "Texte du refrain, un vers par ligne" : "Texte du couplet, un vers par ligne"}">${esc(s.texte)}</textarea>
+    </div>`;
+  }).join("") || `<p class="hint" style="margin:0 0 12px">Ajoutez les couplets et le refrain dans l'ordre du chant.</p>`;
+}
+$("#sections").addEventListener("input", e => { if (e.target.matches("textarea")) sections[+e.target.dataset.i].texte = e.target.value; });
+$("#sections").addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const i = +b.closest(".section").dataset.i, a = b.dataset.act;
+  if (a === "rm") { if (sections[i].texte.trim() && !window.__skipConfirm) { confirmBox("Supprimer cette partie ?", "Le texte saisi sera perdu.").then(ok => { if (ok) { sections.splice(i, 1); renderSections(); } }); return; } sections.splice(i, 1); }
+  if (a === "up" && i > 0) [sections[i - 1], sections[i]] = [sections[i], sections[i - 1]];
+  if (a === "down" && i < sections.length - 1) [sections[i + 1], sections[i]] = [sections[i], sections[i + 1]];
+  renderSections();
+});
+const addSec = type => { sections.push({ type, texte: "" }); renderSections(); const tas = $("#sections").querySelectorAll("textarea"); tas[tas.length - 1].focus(); };
+$("#add-couplet").onclick = () => addSec("couplet");
+$("#add-refrain").onclick = () => addSec("refrain");
+
+function setAudioUI() {
+  const has = newAudio && newAudio.blob;
+  $("#a-cur").classList.toggle("hide", !has);
+  $("#a-name").textContent = has ? newAudio.name : "";
+}
+let testAudio = null;
+$("#a-test").onclick = () => {
+  if (!newAudio?.blob) return;
+  if (testAudio && !testAudio.paused) { testAudio.pause(); $("#a-test").textContent = "▶"; return; }
+  testAudio = new Audio(URL.createObjectURL(newAudio.blob));
+  testAudio.onended = () => $("#a-test").textContent = "▶";
+  testAudio.play().then(() => $("#a-test").textContent = "❚❚").catch(() => toast("Lecture impossible."));
+};
+$("#a-del").onclick = () => { if (testAudio) testAudio.pause(); newAudio = { blob: null, name: "" }; setAudioUI(); };
+$("#i-audio").onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  if (f.size > 40 * 1024 * 1024) { toast("Fichier trop lourd (40 Mo max)."); return; }
+  newAudio = { blob: f, name: f.name }; setAudioUI(); e.target.value = "";
+};
+
+/* Enregistrement micro */
+let rec = null, recChunks = [], recT = null, recStart = 0;
+$("#b-rec").onclick = async () => {
+  if (rec && rec.state === "recording") { rec.stop(); return; }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    rec = new MediaRecorder(stream); recChunks = [];
+    rec.ondataavailable = ev => ev.data.size && recChunks.push(ev.data);
+    rec.onstop = () => {
+      stream.getTracks().forEach(t => t.stop()); clearInterval(recT);
+      const type = rec.mimeType || "audio/webm";
+      const ext = type.includes("mp4") ? "m4a" : type.includes("ogg") ? "ogg" : "webm";
+      newAudio = { blob: new Blob(recChunks, { type }), name: "Enregistrement." + ext };
+      setAudioUI(); $("#rec-lbl").textContent = "Enregistrer"; $("#rec-state").classList.add("hide");
+      toast("Mélodie enregistrée.");
+    };
+    rec.start(); recStart = Date.now();
+    $("#rec-lbl").textContent = "Arrêter"; $("#rec-state").classList.remove("hide");
+    recT = setInterval(() => $("#rec-time").textContent = fmt((Date.now() - recStart) / 1000), 300);
+  } catch {
+    toast("Micro indisponible ici : importez plutôt un mémo vocal.");
+  }
+};
+
+function openForm(c) {
+  editing = c;
+  $("#form-title").textContent = c ? `Modifier le chant n° ${c.numero}` : "Nouveau chant";
+  fillRcSelect(c ? (c.recueil || "") : (["all", "none"].includes(filtreRc) ? "" : filtreRc));
+  $("#i-num").value = c?.numero ?? "";
+  $("#i-titre").value = c?.titre ?? "";
+  $("#i-auteur").value = c?.auteur ?? "";
+  $("#i-date").value = c?.date ?? "";
+  $("#i-langue").value = c?.langue ?? "";
+  $("#i-origine").value = c?.origine ?? "";
+  $("#i-theme").value = c?.theme ?? (filtreTheme || "");
+  $("#i-air").value = c?.air ?? "";
+  $("#themes-dl").innerHTML = [...new Set(chants.map(x => x.theme).filter(Boolean))].map(t => `<option value="${esc(t)}">`).join("");
+  $("#i-notes").value = c?.notes ?? "";
+  sections = c ? JSON.parse(JSON.stringify(c.sections || [])) : [{ type: "couplet", texte: "" }, { type: "refrain", texte: "" }];
+  newAudio = c?.audio ? { blob: c.audio, name: c.audioName || "Mélodie" } : { blob: null, name: "" };
+  renderSections(); setAudioUI();
+  $("#b-save").textContent = c ? "Enregistrer les modifications" : "Enregistrer le chant";
+  $("#b-delete").classList.toggle("hide", !c);
+  $("#b-cancel").classList.toggle("hide", !c);
+  show("saisie");
+}
+$("#b-cancel").onclick = () => editing ? openSong(editing.id) : show("recueil");
+$("#b-delete").onclick = async () => {
+  if (!editing) return;
+  if (!await confirmBox("Supprimer ce chant ?", `Le chant n° ${editing.numero} « ${editing.titre} » sera retiré du recueil.`)) return;
+  await store.del(editing.id); editing = null; await load(); show("recueil"); toast("Chant supprimé.");
+};
+$("#form").onsubmit = async e => {
+  e.preventDefault();
+  if (rec && rec.state === "recording") { toast("Arrêtez d'abord l'enregistrement."); return; }
+  const numero = $("#i-num").value.trim(), titre = $("#i-titre").value.trim();
+  const recueil = $("#i-recueil").value;
+  if (!recueil || recueil === "__new__") { toast("Choisissez le recueil du chant."); $("#i-recueil").focus(); return; }
+  if (!numero || !titre) { toast("Le numéro et le titre sont obligatoires."); return; }
+  const dup = chants.find(x => x.recueil === recueil && String(x.numero) === numero && (!editing || x.id !== editing.id));
+  if (dup && !await confirmBox("Numéro déjà utilisé", `Dans « ${rcName(recueil)} », le n° ${numero} est déjà attribué à « ${dup.titre} ». Enregistrer quand même ?`)) return;
+  const c = {
+    id: editing?.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+    recueil, numero, titre,
+    auteur: $("#i-auteur").value.trim(), date: $("#i-date").value.trim(),
+    langue: $("#i-langue").value.trim(), origine: $("#i-origine").value.trim(),
+    theme: $("#i-theme").value.trim(), air: $("#i-air").value.trim(),
+    notes: $("#i-notes").value.trim(),
+    sections: sections.filter(s => s.texte.trim()).map(s => ({ type: s.type, texte: s.texte.replace(/\s+$/g, "") })),
+    audio: newAudio?.blob || null, audioName: newAudio?.blob ? newAudio.name : "",
+    createdAt: editing?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString()
+  };
+  try { await store.put(c); } catch { toast("Enregistrement impossible (espace plein ?)."); return; }
+  await load(); toast(editing ? "Modifications enregistrées." : `Chant n° ${numero} ajouté.`);
+  openSong(c.id);
+};
+
+/* ---------- Sauvegarde / restauration ---------- */
+const blobToB64 = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(b); });
+const b64ToBlob = async d => (await fetch(d)).blob();
+$("#lnk-export").onclick = async e => {
+  e.preventDefault();
+  if (!chants.length) { toast("Le recueil est vide."); return; }
+  const out = [];
+  for (const c of chants) out.push({ ...c, audio: c.audio ? await blobToB64(c.audio) : null });
+  const blob = new Blob([JSON.stringify({ app: "recueil-chants", version: 2, exportedAt: new Date().toISOString(), recueils, chants: out })], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `recueil-chants-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast("Sauvegarde téléchargée.");
+};
+$("#lnk-import").onclick = e => { e.preventDefault(); $("#f-import").click(); };
+$("#f-import").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    const list = Array.isArray(data) ? data : data.chants;
+    if (!Array.isArray(list)) throw 0;
+    if (!await confirmBox("Restaurer la sauvegarde ?", `${list.length} chant(s) seront ajoutés ou mis à jour.`)) return;
+    if (Array.isArray(data.recueils)) for (const r of data.recueils) if (r && r.id && r.nom) await store.recueils.put(r);
+    for (const c of list) {
+      if (!c || !c.id || !c.titre) continue;
+      await store.put({ ...c, audio: typeof c.audio === "string" ? await b64ToBlob(c.audio) : null });
+    }
+    await load(); toast("Recueil restauré.");
+  } catch { toast("Fichier de sauvegarde invalide."); }
+};
+
+/* ---------- Import PDF ---------- */
+async function extractLines(pdf) {
+  const out = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const vp = page.getViewport({ scale: 1 });
+    const tc = await page.getTextContent();
+    const mid = vp.width / 2;
+    const items = tc.items.filter(i => i.str && i.str.trim() !== "" || (i.str === " "))
+      .map(i => ({ s: i.str, x: i.transform[4], y: i.transform[5], w: i.width || 0, h: Math.abs(i.transform[3]) || 10 }));
+    // Two-column detection: are there many items starting right of the middle?
+    const right = items.filter(i => i.x >= mid - 5 && i.s.trim()).length;
+    const twoCols = right > items.filter(i => i.s.trim()).length * 0.2;
+    const cols = twoCols ? [items.filter(i => i.x < mid - 5), items.filter(i => i.x >= mid - 5)] : [items];
+    for (const col of cols) {
+      col.sort((a, b) => b.y - a.y || a.x - b.x);
+      const lines = [];
+      for (const it of col) {
+        const last = lines[lines.length - 1];
+        if (last && Math.abs(last.y - it.y) < Math.max(2.5, it.h * 0.4)) last.items.push(it);
+        else lines.push({ y: it.y, items: [it] });
+      }
+      let prevY = null;
+      for (const ln of lines) {
+        const h = Math.max(...ln.items.map(i => i.h));
+        const gap = prevY !== null && (prevY - ln.y) > h * 1.75;
+        prevY = ln.y;
+        ln.items.sort((a, b) => a.x - b.x);
+        let txt = "", end = null;
+        for (const it of ln.items) {
+          if (end !== null && it.x - end > 1.5 && !txt.endsWith(" ") && !it.s.startsWith(" ")) txt += " ";
+          txt += it.s; end = it.x + it.w;
+        }
+        txt = txt.replace(/\s+/g, " ").trim();
+        if (txt) out.push({ t: txt, page: p, gap });
+      }
+    }
+  }
+  return out;
+}
+
+function parseHymnal(lines) {
+  const hasLower = s => /\p{Ll}/u.test(s);
+  const letters = s => (s.match(/\p{L}/gu) || []).length;
+  const songs = []; let theme = "", cur = null, sec = null;
+  for (const { t, gap } of lines) {
+    if (/^\d{1,3}$/.test(t)) continue; // page number
+    let m = t.match(/^(\d{1,4})\s*(?:[.)]\s*|\s+)(.+)$/);
+    if (m) {
+      let title = m[2].trim(), ref = "";
+      const r = title.match(/^(.*?)\s*\(([^()]*)\)\s*$/);
+      if (r) { title = r[1].trim(); ref = r[2].trim(); }
+      if (!hasLower(title) && letters(title) >= 3) {
+        cur = { numero: m[1], titre: title, air: ref, theme, sections: [] }; sec = null;
+        songs.push(cur); continue;
+      }
+    }
+    if (!hasLower(t) && letters(t) >= 4 && !/^\d/.test(t)) { theme = t; if (cur) cur = null; continue; }
+    if (!cur) continue;
+    const v = t.match(/^(\d{1,2})\s*\.\s*(.*)$/);
+    if (v) { sec = { type: "couplet", lines: v[2] ? [v[2]] : [] }; cur.sections.push(sec); continue; }
+    if (/^(R\/|Réf\.?|Refrain|CH|Koras?)\b/i.test(t)) {
+      sec = { type: "refrain", lines: [t.replace(/^(R\/|Réf\.?|Refrain|CH|Koras?)\s*[:.\-–]?\s*/i, "")].filter(Boolean) };
+      cur.sections.push(sec); continue;
+    }
+    if (!sec) { sec = { type: "couplet", lines: [] }; cur.sections.push(sec); }
+    else if (gap && sec.lines.length) { sec = { type: "refrain", lines: [] }; cur.sections.push(sec); }
+    sec.lines.push(t);
+  }
+  return songs.map(s => ({ ...s, sections: s.sections.map(x => ({ type: x.type, texte: x.lines.join("\n") })).filter(x => x.texte.trim()) }));
+}
+
+const PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+const loadScript = src => new Promise((res, rej) => { const sc = document.createElement("script"); sc.src = src; sc.onload = res; sc.onerror = rej; document.head.appendChild(sc); });
+let pdfReady = null;
+function loadPdfJs() {
+  if (!pdfReady) pdfReady = (async () => {
+    await loadScript(PDFJS + "pdf.min.js");
+    await loadScript(PDFJS + "pdf.worker.min.js"); // traitement dans la page (pas de worker séparé)
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + "pdf.worker.min.js";
+    return window.pdfjsLib;
+  })().catch(e => { pdfReady = null; throw e; });
+  return pdfReady;
+}
+let parsed = [];
+function impStatus(msg, pct) { $("#imp-status").classList.remove("hide"); $("#imp-msg").textContent = msg; $("#imp-bar").style.width = (pct || 0) + "%"; }
+function openImport() {
+  $("#imp-result").classList.add("hide"); $("#imp-status").classList.add("hide"); parsed = [];
+  show("import"); loadPdfJs().catch(() => {});
+}
+$("#lnk-pdf").onclick = e => { e.preventDefault(); openImport(); };
+$("#imp-back").onclick = () => show("recueil");
+$("#f-pdf").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  $("#imp-result").classList.add("hide");
+  try {
+    impStatus("Chargement du lecteur PDF…", 5);
+    const lib = await loadPdfJs();
+    impStatus("Ouverture du fichier…", 10);
+    const pdf = await lib.getDocument({ data: new Uint8Array(await f.arrayBuffer()) }).promise;
+    const orig = pdf.getPage.bind(pdf); let done = 0;
+    pdf.getPage = async n => { const pg = await orig(n); done++; impStatus(`Lecture de la page ${done} / ${pdf.numPages}…`, 10 + 85 * done / pdf.numPages); return pg; };
+    const lines = await extractLines(pdf);
+    parsed = parseHymnal(lines);
+    if (!parsed.length) { impStatus("Aucun chant reconnu dans ce PDF. S'agit-il d'un document scanné (image) ? Seuls les PDF contenant du texte peuvent être lus.", 100); return; }
+    impStatus(`Lecture terminée : ${parsed.length} chants trouvés.`, 100);
+    renderImport(f.name);
+  } catch (err) {
+    console.error(err);
+    impStatus("Impossible de lire ce PDF (connexion nécessaire au premier import, ou fichier protégé).", 0);
+  }
+};
+function renderImport(fname) {
+  const themes = [...new Set(parsed.map(c => c.theme).filter(Boolean))];
+  $("#st-n").textContent = parsed.length;
+  $("#st-t").textContent = themes.length;
+  $("#st-r").textContent = parsed.filter(c => c.sections.some(x => x.type === "refrain")).length;
+  const nums = parsed.map(c => +c.numero).filter(n => !isNaN(n));
+  const miss = []; if (nums.length) { const set = new Set(nums); for (let i = Math.min(...nums); i <= Math.max(...nums); i++) if (!set.has(i)) miss.push(i); }
+  $("#st-warn").textContent = (miss.length ? `Numéros absents : ${miss.slice(0, 15).join(", ")}${miss.length > 15 ? "…" : ""}. ` : "Numérotation complète, sans trou. ") + "Les refrains sont détectés automatiquement : vérifiez-les en ouvrant les chants.";
+  const guess = recueils.find(r => norm(fname + " " + r.nom).includes("aj") && norm(r.nom).includes("aj")) || recueils.find(r => r.id === filtreRc);
+  $("#imp-rc").innerHTML = recueils.map(r => `<option value="${esc(r.id)}">${esc(r.nom)}</option>`).join("") + `<option value="__new__">+ Créer un nouveau recueil…</option>`;
+  $("#imp-rc").value = guess ? guess.id : recueils[0]?.id || "";
+  if (!$("#imp-langue").value && /aj/i.test(fname)) $("#imp-langue").value = "Ajië";
+  let th = null;
+  $("#imp-list").innerHTML = parsed.map(c => {
+    const head = c.theme !== th ? `<div class="imp-th">${esc(c.theme || "Sans rubrique")}</div>` : ""; th = c.theme;
+    return head + `<div class="imp-row"><b>${esc(c.numero)}</b><span>${esc(c.titre)}</span><i>${c.sections.length} partie${c.sections.length > 1 ? "s" : ""}</i></div>`;
+  }).join("");
+  $("#imp-result").classList.remove("hide");
+}
+$("#imp-rc").addEventListener("change", async e => {
+  if (e.target.value !== "__new__") return;
+  const id = await newRecueil(true);
+  const cur = id || recueils[0]?.id || "";
+  $("#imp-rc").innerHTML = recueils.map(r => `<option value="${esc(r.id)}">${esc(r.nom)}</option>`).join("") + `<option value="__new__">+ Créer un nouveau recueil…</option>`;
+  $("#imp-rc").value = cur;
+});
+$("#imp-go").onclick = async () => {
+  const rc = $("#imp-rc").value; if (!rc || rc === "__new__") { toast("Choisissez un recueil."); return; }
+  const mode = $("#imp-dup").value, langue = $("#imp-langue").value.trim();
+  const btn = $("#imp-go"); btn.disabled = true;
+  let added = 0, replaced = 0, skipped = 0;
+  try {
+    for (const p of parsed) {
+      const ex = chants.find(x => x.recueil === rc && String(x.numero) === String(p.numero));
+      if (ex && mode === "skip") { skipped++; continue; }
+      const now = new Date().toISOString();
+      const c = {
+        ...(ex || {}),
+        id: ex?.id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 7)),
+        recueil: rc, numero: String(p.numero), titre: p.titre, theme: p.theme || "", air: p.air || "",
+        langue: langue || ex?.langue || "", sections: p.sections,
+        auteur: ex?.auteur || "", date: ex?.date || "", origine: ex?.origine || "", notes: ex?.notes || "",
+        audio: ex?.audio || null, audioName: ex?.audioName || "",
+        createdAt: ex?.createdAt || now, updatedAt: now
+      };
+      await store.put(c); ex ? replaced++ : added++;
+    }
+  } catch { toast("Erreur pendant l'enregistrement."); }
+  btn.disabled = false;
+  filtreRc = rc; filtreTheme = ""; try { localStorage.setItem("rc-filtre", rc); } catch {}
+  await load(); show("recueil");
+  toast(`${added} ajouté(s)` + (replaced ? `, ${replaced} remplacé(s)` : "") + (skipped ? `, ${skipped} ignoré(s)` : "") + ".");
+};
+
+load();
+})();
+</script>
+</body>
+</html>
