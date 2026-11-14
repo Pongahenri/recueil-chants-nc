@@ -64,6 +64,21 @@ header{position:sticky;top:0;z-index:20;background:var(--blue);color:#fff;box-sh
 .stat div{flex:1;min-width:90px;background:var(--blue-soft);border-radius:12px;padding:10px 12px}
 .stat b{display:block;font-size:22px;color:var(--blue);font-family:var(--serif)}
 .stat span{font-size:12.5px;color:var(--muted)}
+.mode{display:flex;background:var(--blue-soft);border-radius:12px;padding:3px;margin:0 0 10px}
+.mode button{flex:1;border:0;background:none;padding:9px 6px;border-radius:9px;font-weight:600;font-size:14px;color:var(--blue)}
+.mode button.on{background:var(--card);box-shadow:0 1px 4px rgba(0,0,0,.10)}
+.alpha{display:grid;grid-template-columns:repeat(9,1fr);gap:5px;margin:0 0 10px}
+.alpha button{height:38px;border-radius:9px;border:1px solid var(--line);background:var(--card);font-family:var(--serif);font-weight:700;font-size:16px;color:var(--blue);padding:0}
+.alpha button.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.alpha button:disabled{opacity:.28}
+.letter-h{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--gold);margin:16px 2px 0;border-bottom:2px solid var(--line);padding-bottom:4px}
+.idx{display:flex;align-items:baseline;gap:10px;background:none;border:0;border-radius:0;border-bottom:1px dashed var(--line);padding:12px 4px;text-align:left;width:100%}
+.idx .t{flex:1;font-family:var(--serif);font-size:16.5px;font-weight:600;line-height:1.3}
+.idx .n{flex:none;font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums;font-size:14.5px}
+.list.az{gap:0}
+.snip{display:block;font-size:13.5px;color:var(--ink);font-family:var(--serif);font-style:italic;font-weight:400;margin-top:4px;line-height:1.4}
+.snip em{font-style:normal;font-family:var(--sans);font-size:11.5px;color:var(--muted);margin-right:4px}
+mark{background:#ffe39a;color:inherit;border-radius:3px;padding:0 1px}
 .empty{text-align:center;padding:48px 16px;color:var(--muted)}
 .empty b{display:block;color:var(--ink);font-family:var(--serif);font-size:18px;margin-bottom:6px}
 
@@ -160,8 +175,10 @@ textarea{font-family:var(--serif);line-height:1.55;min-height:120px;resize:verti
     <div class="chips" id="chips"></div>
     <div class="search">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-      <input id="q" type="search" placeholder="N° du cantique ou titre…" autocomplete="off">
+      <input id="q" type="search" placeholder="N°, titre ou mot des paroles…" autocomplete="off">
     </div>
+    <div class="mode" id="mode"><button data-m="num">Par numéro</button><button data-m="az">Sommaire A–Z</button></div>
+    <div class="alpha hide" id="alpha"></div>
     <select id="theme-f" class="theme-f hide"></select>
     <div class="meta-line"><span id="count"></span><span><a href="#" id="lnk-pdf" style="color:var(--blue)">Importer un PDF</a> · <a href="#" id="lnk-export" style="color:var(--blue)">Sauvegarder</a> · <a href="#" id="lnk-import" style="color:var(--blue)">Restaurer</a></span></div>
     <div class="list" id="list"></div>
@@ -362,7 +379,7 @@ async function load() {
   recueils = await store.recueils.all();
   if (!recueils.length) { for (const r of DEFAULT_RC) await store.recueils.put(r); recueils = DEFAULT_RC.slice(); }
   recueils.sort((a, b) => (a.ordre || 0) - (b.ordre || 0));
-  chants = (await store.all()).sort(byNum);
+  chants = (await store.all()).sort(byNum); ix.clear();
   if (filtreRc !== "all" && filtreRc !== "none" && !recueils.some(r => r.id === filtreRc)) filtreRc = "all";
   renderChips(); renderList(); fillRcSelect();
 }
@@ -431,12 +448,80 @@ document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
   if (t.dataset.tab === "saisie") openForm(null); else show("recueil");
 });
 
+/* ---------- Recherche : index, surlignage, extraits ---------- */
+const nmap = s => {
+  const str = String(s ?? ""); let n = ""; const map = [];
+  for (let i = 0; i < str.length;) {
+    const ch = String.fromCodePoint(str.codePointAt(i));
+    const k = ch.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    for (let j = 0; j < k.length; j++) { n += k[j]; map.push(i); }
+    i += ch.length;
+  }
+  map.push(str.length);
+  return { n, map };
+};
+function hl(text, terms) {
+  const str = String(text ?? "");
+  if (!terms || !terms.length) return esc(str);
+  const { n, map } = nmap(str); const rg = [];
+  for (const t of terms) { let p = n.indexOf(t); while (p !== -1) { rg.push([map[p], map[p + t.length]]); p = n.indexOf(t, p + t.length); } }
+  if (!rg.length) return esc(str);
+  rg.sort((a, b) => a[0] - b[0]);
+  const m = [rg[0].slice()];
+  for (const r of rg.slice(1)) { const l = m[m.length - 1]; if (r[0] <= l[1]) l[1] = Math.max(l[1], r[1]); else m.push(r.slice()); }
+  let out = "", pos = 0;
+  for (const [a, b] of m) { out += esc(str.slice(pos, a)) + "<mark>" + esc(str.slice(a, b)) + "</mark>"; pos = b; }
+  return out + esc(str.slice(pos));
+}
+const ix = new Map();
+function IX(c) {
+  let x = ix.get(c.id); if (x) return x;
+  const t = norm(c.titre), k = t.replace(/^[^a-z0-9]+/, "");
+  const o = norm([c.auteur, c.theme, c.air, c.langue, c.origine].filter(Boolean).join(" "));
+  const p = norm((c.sections || []).map(s => s.texte).join("\n"));
+  x = { t, k, o, p, all: t + " " + o + " " + p, L: /^[a-z]/.test(k) ? k[0].toUpperCase() : "#" };
+  ix.set(c.id, x); return x;
+}
+function snippet(c, terms) {
+  let n = 0;
+  for (const s of c.sections || []) {
+    const lab = s.type === "refrain" ? "Refrain" : "Couplet " + (++n);
+    for (const line of s.texte.split("\n")) {
+      const nl = norm(line), t = terms.find(t => nl.includes(t)); if (!t) continue;
+      let txt = line.trim();
+      if (txt.length > 90) { const p = Math.max(0, nmap(txt).map[nmap(txt).n.indexOf(t)] - 35); txt = (p ? "…" : "") + txt.slice(p, p + 85).trim() + "…"; }
+      return `<span class="snip"><em>${lab}</em>${hl(txt, terms)}</span>`;
+    }
+  }
+  return "";
+}
+const byTitle = (a, b) => IX(a).k.localeCompare(IX(b).k, "fr") || byNum(a, b);
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ#".split("");
+let mode = "num", lettre = "", lastTerms = [], listY = 0;
+try { mode = localStorage.getItem("rc-mode") === "az" ? "az" : "num"; } catch {}
+$("#mode").onclick = e => {
+  const b = e.target.closest("[data-m]"); if (!b) return;
+  mode = b.dataset.m; if (mode === "num") lettre = "";
+  try { localStorage.setItem("rc-mode", mode); } catch {}
+  renderList();
+};
+$("#alpha").onclick = e => {
+  const b = e.target.closest("[data-l]"); if (!b) return;
+  lettre = lettre === b.dataset.l ? "" : b.dataset.l;
+  renderList();
+};
+
 /* ---------- Recueil ---------- */
 let filtreTheme = "";
 $("#theme-f").addEventListener("change", e => { filtreTheme = e.target.value; renderList(); });
 function renderList() {
-  const q = norm($("#q").value), list = $("#list");
+  const q = norm($("#q").value).replace(/\s+/g, " "), list = $("#list");
   const isNum = /^\d+$/.test(q);
+  const terms = isNum ? [] : q.split(" ").filter(Boolean);
+  lastTerms = terms;
+  const az = mode === "az";
+  $("#mode").querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.m === mode));
+  list.classList.toggle("az", az);
   const base0 = chants.filter(c => filtreRc === "all" ? true : filtreRc === "none" ? !recueils.some(r => r.id === c.recueil) : c.recueil === filtreRc);
   const themes = [...new Set(base0.map(c => c.theme).filter(Boolean))];
   const tf = $("#theme-f");
@@ -450,30 +535,56 @@ function renderList() {
   } else filtreTheme = "";
   tf.classList.toggle("hide", !themes.length);
   const base = filtreTheme ? base0.filter(c => c.theme === filtreTheme) : base0;
-  const res = !q ? base : base.filter(c =>
-    isNum ? String(c.numero).startsWith(q)
-          : norm(c.titre).includes(q) || norm(c.auteur).includes(q) || norm(c.theme).includes(q) || String(c.numero) === q);
-  if (isNum) res.sort((a, b) => (String(b.numero) === q) - (String(a.numero) === q));
+  // Barre des lettres (sommaire)
+  $("#alpha").classList.toggle("hide", !az);
+  if (az) {
+    const have = new Set(base.map(c => IX(c).L));
+    $("#alpha").innerHTML = LETTERS.map(L => `<button data-l="${L}" class="${lettre === L ? "on" : ""}" ${have.has(L) || lettre === L ? "" : "disabled"} aria-label="Lettre ${L}">${L}</button>`).join("");
+  }
+  const base2 = az && lettre ? base.filter(c => IX(c).L === lettre) : base;
+  let res;
+  if (!q) res = base2.slice();
+  else if (isNum) res = base2.filter(c => String(c.numero).startsWith(q));
+  else res = base2.filter(c => terms.every(t => IX(c).all.includes(t)));
+  const order = az ? byTitle : byNum;
+  if (isNum) res.sort((a, b) => (String(b.numero) === q) - (String(a.numero) === q) || order(a, b));
+  else if (terms.length && !az) {
+    const score = c => { const x = IX(c); if (terms.every(t => x.t.includes(t))) return x.t.startsWith(q) ? 3 : 2; return terms.every(t => (x.t + " " + x.o).includes(t)) ? 1 : 0; };
+    const sc = new Map(res.map(c => [c.id, score(c)]));
+    res.sort((a, b) => sc.get(b.id) - sc.get(a.id) || order(a, b));
+  } else res.sort(order);
   const lieu = filtreRc === "all" ? "au total" : "dans « " + (filtreRc === "none" ? "Non classés" : rcName(filtreRc)) + " »";
-  $("#count").textContent = base.length ? `${res.length} chant${res.length > 1 ? "s" : ""} ${q ? "trouvé" + (res.length > 1 ? "s" : "") + " " : ""}${lieu}` : "";
+  $("#count").textContent = base.length ? `${res.length} chant${res.length > 1 ? "s" : ""} ${q ? "trouvé" + (res.length > 1 ? "s" : "") + " " : ""}${az && lettre ? `à la lettre ${lettre} ` : ""}${lieu}` : "";
   if (!base.length) {
     const nom = filtreRc === "all" ? "Le recueil est vide" : `« ${esc(rcName(filtreRc))} » est vide`;
     list.innerHTML = `<div class="empty"><b>${nom}</b>Ajoutez un chant depuis l'onglet « Ajouter un chant ».<br><br><button class="btn primary" id="first">+ Ajouter un chant</button></div>`;
     $("#first").onclick = () => openForm(null); return;
   }
-  if (!res.length) { list.innerHTML = `<div class="empty"><b>Aucun résultat</b>Essayez un autre numéro ou une partie du titre.</div>`; return; }
-  list.innerHTML = res.map(c => `
+  if (!res.length) {
+    list.innerHTML = `<div class="empty"><b>Aucun résultat</b>${az && lettre ? `Aucun chant à la lettre ${lettre} pour cette recherche.` : "Essayez un autre numéro, une partie du titre ou un mot des paroles."}</div>`; return;
+  }
+  const snip = c => terms.length && !terms.every(t => IX(c).t.includes(t)) ? snippet(c, terms) : "";
+  const rcTag = c => filtreRc === "all" ? `<span class="rc-tag" style="display:block">${esc(rcName(c.recueil))}</span>` : "";
+  if (az) {
+    let curL = null;
+    list.innerHTML = res.map(c => {
+      const L = IX(c).L, h = L !== curL ? `<div class="letter-h">${L}</div>` : ""; curL = L;
+      return h + `<button class="idx item" data-id="${esc(c.id)}"><span class="t">${rcTag(c)}${hl(c.titre, terms)}${snip(c)}</span><span class="n">n° ${esc(c.numero)}</span></button>`;
+    }).join("");
+  } else {
+    list.innerHTML = res.map(c => `
     <button class="item" data-id="${esc(c.id)}">
       <span class="num">${esc(c.numero)}</span>
-      <span>${filtreRc === "all" ? `<span class="rc-tag" style="display:block">${esc(rcName(c.recueil))}</span>` : ""}<span class="t">${esc(c.titre)}</span>
-      <span class="s" style="display:block">${esc([filtreTheme ? "" : c.theme, c.air && "Air " + c.air, c.langue, c.auteur, c.date].filter(Boolean).join(" · "))}</span></span>
+      <span>${rcTag(c)}<span class="t">${hl(c.titre, terms)}</span>
+      <span class="s" style="display:block">${esc([filtreTheme ? "" : c.theme, c.air && "Air " + c.air, c.langue, c.auteur, c.date].filter(Boolean).join(" · "))}</span>${snip(c)}</span>
       ${c.audio ? `<span class="note" title="Mélodie disponible"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></span>` : ""}
     </button>`).join("");
-  list.querySelectorAll(".item").forEach(b => b.onclick = () => openSong(b.dataset.id));
+  }
+  list.querySelectorAll(".item").forEach(b => b.onclick = () => { listY = window.scrollY; openSong(b.dataset.id, lastTerms); });
 }
 $("#q").addEventListener("input", renderList);
 $("#q").addEventListener("keydown", e => {
-  if (e.key === "Enter") { const first = $("#list .item"); if (first) openSong(first.dataset.id); }
+  if (e.key === "Enter") { const first = $("#list .item"); if (first) { listY = window.scrollY; openSong(first.dataset.id, lastTerms); } }
 });
 
 /* ---------- Affichage d'un chant ---------- */
@@ -483,12 +594,12 @@ const ICON_PLAY = `<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><
 const ICON_PAUSE = `<svg width="22" height="22" viewBox="0 0 24 24" fill="#fff"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>`;
 let fs = 20; try { fs = +localStorage.getItem("rc-fs") || 20; } catch {}
 
-function openSong(id) {
+function openSong(id, terms = []) {
   const c = chants.find(x => x.id === id); if (!c) return;
   current = c;
   $("#s-rc").textContent = rcName(c.recueil); $("#s-rc").classList.remove("hide");
   $("#s-num").textContent = c.numero;
-  $("#s-title").textContent = c.titre;
+  $("#s-title").innerHTML = hl(c.titre, terms);
   const meta = [];
   if (c.origine) meta.push(esc(c.origine));
   const l2 = [c.date && "Date : " + esc(c.date), c.auteur && "Auteur : " + esc(c.auteur)].filter(Boolean).join(" — ");
@@ -500,7 +611,7 @@ function openSong(id) {
   let n = 0;
   $("#s-lyrics").innerHTML = (c.sections || []).filter(s => s.texte.trim()).map(s => {
     const ref = s.type === "refrain";
-    return `<div class="verse ${ref ? "ref" : ""}"><div class="lab">${ref ? "CH" : (++n) + ")"}</div><div class="txt">${esc(s.texte.trim())}</div></div>`;
+    return `<div class="verse ${ref ? "ref" : ""}"><div class="lab">${ref ? "CH" : (++n) + ")"}</div><div class="txt">${hl(s.texte.trim(), terms)}</div></div>`;
   }).join("") || `<p class="no-audio">Paroles non saisies.</p>`;
   $("#s-lyrics").style.setProperty("--fs", fs + "px");
   $("#s-notes").classList.toggle("hide", !c.notes); $("#s-notes").textContent = c.notes || "";
@@ -511,6 +622,8 @@ function openSong(id) {
   $("#player").classList.toggle("hide", !c.audio);
   $("#no-audio").classList.toggle("hide", !!c.audio);
   show("chant");
+  const mk = terms.length && $("#s-lyrics mark");
+  if (mk) setTimeout(() => mk.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
 }
 function stopAudio() { audio.pause(); try { audio.currentTime = 0; } catch {} $("#b-play").innerHTML = ICON_PLAY; $("#prog-bar").style.width = "0"; }
 $("#b-play").innerHTML = ICON_PLAY;
@@ -526,7 +639,7 @@ audio.ontimeupdate = audio.onloadedmetadata = () => {
   $("#time").textContent = fmt(audio.currentTime) + " / " + fmt(d);
 };
 $("#prog").onclick = e => { const r = e.currentTarget.getBoundingClientRect(); if (audio.duration) audio.currentTime = (e.clientX - r.left) / r.width * audio.duration; };
-$("#b-back").onclick = () => show("recueil");
+$("#b-back").onclick = () => { show("recueil"); window.scrollTo(0, listY); };
 $("#b-edit").onclick = () => current && openForm(current);
 const zoom = d => { fs = Math.min(34, Math.max(14, fs + d)); $("#s-lyrics").style.setProperty("--fs", fs + "px"); try { localStorage.setItem("rc-fs", fs); } catch {} };
 $("#z-minus").onclick = () => zoom(-2); $("#z-plus").onclick = () => zoom(2);
