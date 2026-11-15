@@ -375,6 +375,31 @@ let recueils = [], filtreRc = "all";
 try { filtreRc = localStorage.getItem("rc-filtre") || "all"; } catch {}
 const rcName = id => recueils.find(r => r.id === id)?.nom || "Non classé";
 
+/* Recueil partagé : chants.json publié avec le site, chargé chez tout visiteur */
+async function syncShared() {
+  try {
+    const r = await fetch("chants.json", { cache: "no-cache" });
+    if (!r.ok) return;
+    const data = await r.json();
+    const ver = data.exportedAt || String(r.headers.get("etag") || "");
+    let seen = ""; try { seen = localStorage.getItem("rc-shared-v") || ""; } catch {}
+    if (ver && ver === seen) return;
+    const list = Array.isArray(data) ? data : data.chants || [];
+    if (Array.isArray(data.recueils)) {
+      const have = new Set((await store.recueils.all()).map(x => x.id));
+      for (const rc of data.recueils) if (rc && rc.id && rc.nom && !have.has(rc.id)) await store.recueils.put(rc);
+    }
+    const local = new Map((await store.all()).map(c => [c.id, c]));
+    for (const c of list) {
+      if (!c || !c.id || !c.titre) continue;
+      const ex = local.get(c.id);
+      if (ex && (ex.updatedAt || "") >= (c.updatedAt || "")) continue;
+      await store.put({ ...c, audio: typeof c.audio === "string" ? await b64ToBlob(c.audio) : (ex?.audio || null) });
+    }
+    try { localStorage.setItem("rc-shared-v", ver); } catch {}
+  } catch {}
+}
+
 async function load() {
   recueils = await store.recueils.all();
   if (!recueils.length) { for (const r of DEFAULT_RC) await store.recueils.put(r); recueils = DEFAULT_RC.slice(); }
@@ -979,7 +1004,7 @@ $("#imp-go").onclick = async () => {
   toast(`${added} ajouté(s)` + (replaced ? `, ${replaced} remplacé(s)` : "") + (skipped ? `, ${skipped} ignoré(s)` : "") + ".");
 };
 
-load();
+load().then(syncShared).then(load);
 })();
 </script>
 </body>
