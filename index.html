@@ -150,6 +150,9 @@ textarea{font-family:var(--serif);line-height:1.55;min-height:120px;resize:verti
 .modal p{margin:0 0 16px;color:var(--muted);font-size:14.5px}
 .modal .row-btns{justify-content:flex-end}
 .hide{display:none!important}
+body:not(.admin) .adm{display:none!important}
+.admin-badge{font-size:10.5px;font-weight:700;letter-spacing:.5px;background:var(--gold);color:#fff;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+.logo{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 @media (max-width:520px){.grid{grid-template-columns:1fr}.song-title{font-size:21px}.player{top:100px}}
 </style>
 </head>
@@ -157,14 +160,14 @@ textarea{font-family:var(--serif);line-height:1.55;min-height:120px;resize:verti
 
 <header>
   <div class="hd">
-    <div class="logo" aria-hidden="true">
+    <div class="logo" id="logo" title="Mode gestion (appui long)">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
     </div>
-    <h1>Recueil de chants<small>Chants traditionnels protestants · Nouvelle-Calédonie</small></h1>
+    <h1>Recueil de chants<span class="admin-badge adm">GESTION</span><small>Chants traditionnels protestants · Nouvelle-Calédonie</small></h1>
   </div>
   <nav class="tabs">
     <button class="tab on" data-tab="recueil">Recueil</button>
-    <button class="tab" data-tab="saisie">Ajouter un chant</button>
+    <button class="tab adm" data-tab="saisie">Ajouter un chant</button>
   </nav>
 </header>
 
@@ -180,7 +183,7 @@ textarea{font-family:var(--serif);line-height:1.55;min-height:120px;resize:verti
     <div class="mode" id="mode"><button data-m="num">Par numéro</button><button data-m="az">Sommaire A–Z</button></div>
     <div class="alpha hide" id="alpha"></div>
     <select id="theme-f" class="theme-f hide"></select>
-    <div class="meta-line"><span id="count"></span><span><a href="#" id="lnk-pdf" style="color:var(--blue)">Importer un PDF</a> · <a href="#" id="lnk-export" style="color:var(--blue)">Sauvegarder</a> · <a href="#" id="lnk-import" style="color:var(--blue)">Restaurer</a></span></div>
+    <div class="meta-line"><span id="count"></span><span class="adm"><a href="#" id="lnk-pdf" style="color:var(--blue)">Importer un PDF</a> · <a href="#" id="lnk-export" style="color:var(--blue)">Sauvegarder</a> · <a href="#" id="lnk-import" style="color:var(--blue)">Restaurer</a></span></div>
     <div class="list" id="list"></div>
     <input type="file" id="f-import" accept="application/json,.json" class="hide">
   </section>
@@ -196,7 +199,7 @@ textarea{font-family:var(--serif);line-height:1.55;min-height:120px;resize:verti
         <button class="icon-btn" id="z-minus" title="Réduire le texte">A−</button>
         <button class="icon-btn" id="z-plus" title="Agrandir le texte">A+</button>
       </div>
-      <button class="icon-btn" id="b-edit" title="Modifier">
+      <button class="icon-btn adm" id="b-edit" title="Modifier">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
       </button>
     </div>
@@ -414,7 +417,7 @@ function renderChips() {
   const items = [{ id: "all", nom: "Tous" }, ...recueils];
   if (cnt("none")) items.push({ id: "none", nom: "Non classés" });
   $("#chips").innerHTML = items.map(r => `<button class="chip ${filtreRc === r.id ? "on" : ""}" data-rc="${esc(r.id)}">${esc(r.nom)} <span class="c">${cnt(r.id)}</span></button>`).join("")
-    + `<button class="chip add" id="chip-add">+ Nouveau recueil</button>`;
+    + `<button class="chip add adm" id="chip-add">+ Nouveau recueil</button>`;
   $("#chips").querySelectorAll("[data-rc]").forEach(b => b.onclick = () => {
     filtreRc = b.dataset.rc; try { localStorage.setItem("rc-filtre", filtreRc); } catch {}
     renderChips(); renderList();
@@ -462,6 +465,42 @@ function confirmBox(title, text, withInput) {
 const promptBox = (title, ph) => confirmBox(title, ph, true);
 const fmt = s => { if (!isFinite(s)) return "0:00"; s = Math.floor(s); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
 
+/* ---------- Mode gestion (réservé à l'administrateur) ---------- */
+const ADMIN_H = "11cb62f9345d57089ab9e355ae24abc1270253fbc36847b376ef3cc0a4aad9c4";
+const isAdmin = () => document.body.classList.contains("admin");
+function setAdmin(on) {
+  document.body.classList.toggle("admin", on);
+  try { on ? localStorage.setItem("rc-admin", ADMIN_H) : localStorage.removeItem("rc-admin"); } catch {}
+  if (!on && !$("#v-saisie").classList.contains("hide")) show("recueil");
+  if (!on && !$("#v-import").classList.contains("hide")) show("recueil");
+  renderList();
+}
+try { if (localStorage.getItem("rc-admin") === ADMIN_H) document.body.classList.add("admin"); } catch {}
+async function sha(t) {
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
+  return [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, "0")).join("");
+}
+async function adminPrompt() {
+  if (isAdmin()) {
+    if (await confirmBox("Quitter le mode gestion ?", "Les boutons d'ajout et de modification seront masqués sur ce téléphone.")) { setAdmin(false); toast("Mode lecture."); }
+    return;
+  }
+  $("#m-input").setAttribute("inputmode", "numeric"); $("#m-input").type = "password";
+  const code = await promptBox("Mode gestion", "Code d'accès");
+  $("#m-input").type = "text"; $("#m-input").removeAttribute("inputmode");
+  if (code == null || !code.trim()) return;
+  if (await sha("recueil-chants:" + code.trim()) === ADMIN_H) { setAdmin(true); toast("Mode gestion activé."); }
+  else toast("Code incorrect.");
+}
+(() => {
+  const lg = $("#logo"); let t = null;
+  const start = () => { clearTimeout(t); t = setTimeout(() => { t = null; adminPrompt(); }, 700); };
+  const stop = () => { clearTimeout(t); t = null; };
+  lg.addEventListener("pointerdown", start);
+  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => lg.addEventListener(ev, stop));
+  lg.addEventListener("contextmenu", e => e.preventDefault());
+})();
+
 /* ---------- Navigation ---------- */
 function show(view) {
   ["recueil", "chant", "saisie", "import"].forEach(v => $("#v-" + v).classList.toggle("hide", v !== view));
@@ -470,7 +509,7 @@ function show(view) {
   window.scrollTo(0, 0);
 }
 document.querySelectorAll(".tab").forEach(t => t.onclick = () => {
-  if (t.dataset.tab === "saisie") openForm(null); else show("recueil");
+  if (t.dataset.tab === "saisie") { if (isAdmin()) openForm(null); } else show("recueil");
 });
 
 /* ---------- Recherche : index, surlignage, extraits ---------- */
@@ -582,7 +621,8 @@ function renderList() {
   $("#count").textContent = base.length ? `${res.length} chant${res.length > 1 ? "s" : ""} ${q ? "trouvé" + (res.length > 1 ? "s" : "") + " " : ""}${az && lettre ? `à la lettre ${lettre} ` : ""}${lieu}` : "";
   if (!base.length) {
     const nom = filtreRc === "all" ? "Le recueil est vide" : `« ${esc(rcName(filtreRc))} » est vide`;
-    list.innerHTML = `<div class="empty"><b>${nom}</b>Ajoutez un chant depuis l'onglet « Ajouter un chant ».<br><br><button class="btn primary" id="first">+ Ajouter un chant</button></div>`;
+    list.innerHTML = isAdmin() ? `<div class="empty"><b>${nom}</b>Ajoutez un chant depuis l'onglet « Ajouter un chant ».<br><br><button class="btn primary" id="first">+ Ajouter un chant</button></div>` : `<div class="empty"><b>${nom}</b>Les chants arrivent bientôt.</div>`;
+    if (!isAdmin()) return;
     $("#first").onclick = () => openForm(null); return;
   }
   if (!res.length) {
@@ -665,7 +705,7 @@ audio.ontimeupdate = audio.onloadedmetadata = () => {
 };
 $("#prog").onclick = e => { const r = e.currentTarget.getBoundingClientRect(); if (audio.duration) audio.currentTime = (e.clientX - r.left) / r.width * audio.duration; };
 $("#b-back").onclick = () => { show("recueil"); window.scrollTo(0, listY); };
-$("#b-edit").onclick = () => current && openForm(current);
+$("#b-edit").onclick = () => isAdmin() && current && openForm(current);
 const zoom = d => { fs = Math.min(34, Math.max(14, fs + d)); $("#s-lyrics").style.setProperty("--fs", fs + "px"); try { localStorage.setItem("rc-fs", fs); } catch {} };
 $("#z-minus").onclick = () => zoom(-2); $("#z-plus").onclick = () => zoom(2);
 
